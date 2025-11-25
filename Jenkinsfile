@@ -12,6 +12,8 @@ pipeline {
             steps {
                 echo 'Install dependencies'
                 dir('user-service') {
+                    sh 'node -v'
+                    sh 'npm -v'
                     sh 'npm ci'
                 }
             }
