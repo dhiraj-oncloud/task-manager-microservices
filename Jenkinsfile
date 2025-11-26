@@ -2,11 +2,21 @@ pipeline {
     agent any
 
     stages {
-        stage('Debug Tools') {
+        stage('Checkout') {
             steps {
-                sh 'which node || echo "node not found"'
-                sh 'which npm || echo "npm not found"'
-                sh 'env | sort'
+                checkout scm
+            }
+        }
+
+        stage('Build') {
+            steps {
+                dir('user-service') {
+                    sh 'which node'
+                    sh 'node -v'
+                    sh 'which npm'
+                    sh 'npm -v'
+                    sh 'npm ci'
+                }
             }
         }
     }
