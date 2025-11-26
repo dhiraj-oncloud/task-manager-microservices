@@ -40,23 +40,21 @@ pipeline {
             }
         }
 
-       pipeline {
-    agent any
-
-    stages {
         stage('Test Credentials') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'docker-cred-id', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'docker-cred-id',
+                        usernameVariable: 'DOCKER_USER',
+                        passwordVariable: 'DOCKER_PASS'
+                    )
+                ]) {
                     sh '''
                         echo "Jenkins Read Username: $DOCKER_USER"
-                        echo "Password Length: ${#DOCKER_PASS}"   # actual password print nahi karega
+                        echo "Password Length: ${#DOCKER_PASS}"
                     '''
                 }
             }
-        }
-    }
-}
-
         }
 
     }
