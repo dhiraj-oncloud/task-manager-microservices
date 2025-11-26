@@ -1,16 +1,19 @@
 pipeline {
     agent any
 
+    tools {
+        nodejs 'node20'
+    }
+
     stages {
         stage('Checkout') {
             steps {
-                echo 'Checkout code from GitHub'
                 checkout scm
             }
         }
+
         stage('Build') {
             steps {
-                echo 'Install dependencies'
                 dir('user-service') {
                     sh 'node -v'
                     sh 'npm -v'
