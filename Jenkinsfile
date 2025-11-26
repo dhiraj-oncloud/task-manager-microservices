@@ -1,24 +1,12 @@
 pipeline {
     agent any
 
-    tools {
-        nodejs 'node20'
-    }
-
     stages {
-        stage('Checkout') {
+        stage('Test Jenkins') {
             steps {
-                checkout scm
-            }
-        }
-
-        stage('Build') {
-            steps {
-                dir('user-service') {
-                    sh 'node -v'
-                    sh 'npm -v'
-                    sh 'npm ci'
-                }
+                echo 'Jenkins pipeline is running'
+                sh 'whoami'
+                sh 'pwd'
             }
         }
     }
