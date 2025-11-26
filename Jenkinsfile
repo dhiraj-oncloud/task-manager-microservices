@@ -11,11 +11,10 @@ pipeline {
         stage('Build') {
             steps {
                 dir('user-service') {
-                    sh 'which node'
                     sh 'node -v'
-                    sh 'which npm'
                     sh 'npm -v'
                     sh 'npm ci'
+                    sh 'npm test'
                 }
             }
         }
