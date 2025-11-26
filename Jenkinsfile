@@ -44,14 +44,16 @@ pipeline {
             steps {
                 withCredentials([
                     usernamePassword(
-                        credentialsId: 'docker-cred-id',
+                        credentialsId: 'dockerhub-creds',   
                         usernameVariable: 'DOCKER_USER',
                         passwordVariable: 'DOCKER_PASS'
                     )
                 ]) {
                     sh '''
-                        echo "Jenkins Read Username: $DOCKER_USER"
-                        echo "Password Length: ${#DOCKER_PASS}"
+                        echo "===== TESTING DOCKER HUB CREDENTIALS ====="
+                        echo "Username -> $DOCKER_USER"
+                        echo "Password Length -> ${#DOCKER_PASS}"
+                        echo "=========================================="
                     '''
                 }
             }
