@@ -2,11 +2,10 @@ pipeline {
     agent any
 
     stages {
-        stage('Test Jenkins') {
+        stage('Checkout') {
             steps {
-                echo 'Jenkins pipeline is running'
-                sh 'whoami'
-                sh 'pwd'
+                echo 'Checking out code'
+                checkout scm
             }
         }
     }
