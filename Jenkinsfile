@@ -2,27 +2,23 @@ pipeline {
     agent any
 
     stages {
-        stage('Checkout') {
+        stage('Clean Workspace') {
+            steps {
+                deleteDir()
+            }
+        }
+
+        stage('Checkout Code') {
             steps {
                 checkout scm
+                sh 'ls -l'
             }
         }
 
-        stage('Build') {
+        stage('Check Code') {
             steps {
-                dir('user-service') {
-                    sh 'node -v'
-                    sh 'npm -v'
-                    sh 'npm ci'
-                }
-            }
-        }
-
-        stage('Docker Build') {
-            steps {
-                dir('user-service') {
-                    sh 'docker build -t user-service:jenkins .'
-                }
+                sh 'pwd'
+                sh 'ls -R'
             }
         }
     }
