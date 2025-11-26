@@ -40,5 +40,19 @@ pipeline {
             }
         }
 
+        stage('Docker Push') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    dir('user-service') {
+                        sh '''
+                            echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+                            docker tag user-service:jenkins dhirajoncloud/user-service:latest
+                            docker push dhirajoncloud/user-service:latest
+                        '''
+                    }
+                }
+            }
+        }
+
     }
 }
