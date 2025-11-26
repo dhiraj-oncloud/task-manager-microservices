@@ -3,12 +3,14 @@ pipeline {
 
     stages {
 
+        // 1️⃣ Checkout the code from Git
         stage('Checkout') {
             steps {
                 checkout scm
             }
         }
 
+        // 2️⃣ Node Build
         stage('Build') {
             steps {
                 dir('user-service') {
@@ -19,6 +21,7 @@ pipeline {
             }
         }
 
+        // 3️⃣ Docker Build
         stage('Docker Build') {
             steps {
                 dir('user-service') {
@@ -29,6 +32,7 @@ pipeline {
             }
         }
 
+        // 4️⃣ Docker Run
         stage('Docker Run') {
             steps {
                 dir('user-service') {
@@ -40,21 +44,26 @@ pipeline {
             }
         }
 
-        stage('Test Credentials') {
+        // 5️⃣ Docker Push to DockerHub
+        stage('Docker Push') {
             steps {
-                withCredentials([
-                    usernamePassword(
-                        credentialsId: 'dockerhub-creds',   
-                        usernameVariable: 'DOCKER_USER',
-                        passwordVariable: 'DOCKER_PASS'
-                    )
-                ]) {
-                    sh '''
-                        echo "===== TESTING DOCKER HUB CREDENTIALS ====="
-                        echo "Username -> $DOCKER_USER"
-                        echo "Password Length -> ${#DOCKER_PASS}"
-                        echo "=========================================="
-                    '''
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    dir('user-service') {
+                        sh '''
+                            echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+                            docker tag user-service:jenkins dhirajoncloud/user-service:latest
+                            docker push dhirajoncloud/user-service:latest
+                        '''
+                    }
+                }
+            }
+        }
+
+        // 6️⃣ Test Stage
+        stage('Test') {
+            steps {
+                dir('user-service') {
+                    sh 'npm test || true'
                 }
             }
         }
