@@ -1,11 +1,15 @@
 pipeline {
     agent any
 
+    tools {
+        nodejs 'node20'
+    }
+
     stages {
-        stage('Checkout') {
+        stage('Check Node') {
             steps {
-                echo 'Checking out code'
-                checkout scm
+                sh 'node -v'
+                sh 'npm -v'
             }
         }
     }
