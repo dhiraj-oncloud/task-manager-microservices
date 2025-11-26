@@ -1,15 +1,12 @@
 pipeline {
     agent any
 
-    tools {
-        nodejs 'node20'
-    }
-
     stages {
-        stage('Check Node') {
+        stage('Debug Tools') {
             steps {
-                sh 'node -v'
-                sh 'npm -v'
+                sh 'which node || echo "node not found"'
+                sh 'which npm || echo "npm not found"'
+                sh 'env | sort'
             }
         }
     }
