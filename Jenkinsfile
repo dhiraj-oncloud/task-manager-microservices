@@ -2,6 +2,7 @@ pipeline {
     agent any
 
     stages {
+
         stage('Checkout') {
             steps {
                 checkout scm
@@ -27,5 +28,17 @@ pipeline {
                 }
             }
         }
+
+        stage('Docker Run') {
+            steps {
+                dir('user-service') {
+                    sh '''
+                        docker rm -f user-service || true
+                        docker run -d -p 3000:3000 --name user-service user-service:jenkins
+                    '''
+                }
+            }
+        }
+
     }
 }
