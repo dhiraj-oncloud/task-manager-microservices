@@ -40,18 +40,23 @@ pipeline {
             }
         }
 
-        stage('Docker Push') {
+       pipeline {
+    agent any
+
+    stages {
+        stage('Test Credentials') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                    dir('user-service') {
-                        sh '''
-                            echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
-                            docker tag user-service:jenkins dhirajoncloud/user-service:latest
-                            docker push dhirajoncloud/user-service:latest
-                        '''
-                    }
+                withCredentials([usernamePassword(credentialsId: 'docker-cred-id', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    sh '''
+                        echo "Jenkins Read Username: $DOCKER_USER"
+                        echo "Password Length: ${#DOCKER_PASS}"   # actual password print nahi karega
+                    '''
                 }
             }
+        }
+    }
+}
+
         }
 
     }
