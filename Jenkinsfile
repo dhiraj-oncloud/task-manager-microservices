@@ -67,6 +67,16 @@ pipeline {
                 }
             }
         }
+        stage('EC2 SSH Test') {
+    steps {
+        sshagent(['ec2-ssh-key']) {
+            sh '''
+              ssh -o StrictHostKeyChecking=no ec2-user@34.224.23.112 "hostname && whoami"
+            '''
+        }
+    }
+}
+
 
     }
 }
