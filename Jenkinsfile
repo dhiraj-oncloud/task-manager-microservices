@@ -103,6 +103,17 @@ pipeline {
             }
         }
 
+        stage('EC2 SSH Debug Test') {
+  steps {
+    sshagent(['ec2-ssh-key']) {
+      sh '''
+        ssh -vvv -o StrictHostKeyChecking=no ec2-user@34.224.23.112 "echo CONNECTED && hostname"
+      '''
+    }
+  }
+}
+
+
         // 8️⃣ Deploy to EC2
         stage('Deploy to EC2') {
             steps {
