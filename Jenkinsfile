@@ -67,17 +67,31 @@ pipeline {
                 }
             }
         }
-        stage('EC2 SSH Debug Test') {
-    steps {
-        sshagent(['ec2-ssh-key']) {
-            sh '''
-              set -x
-              echo "Testing SSH connection..."
-              ssh -vvv -o StrictHostKeyChecking=no ec2-user@34.224.23.112 "echo CONNECTED && hostname"
-            '''
-        }
+       stage('EC2 SSH Debug Test - detailed') {
+  steps {
+    // use sshUserPrivateKey to get a temporary key file for the build
+    withCredentials([sshUserPrivateKey(credentialsId: 'ec2-ssh-key', keyFileVariable: 'SSH_KEYFILE', usernameVariable: 'SSH_USER')]) {
+      dir('.') {
+        sh '''
+          set -x
+          echo "---- DEBUG: Environment details ----"
+          echo "Jenkins user: $(whoami || true)"
+          echo "SSH key file exists: $( [ -f "$SSH_KEYFILE" ] && echo yes || echo no )"
+          ls -l "$SSH_KEYFILE" || true
+          echo "---- Attempt SSH (verbose) ----"
+          # attempt SSH and capture full verbose output to a file
+          ssh -vvv -o StrictHostKeyChecking=no -i "$SSH_KEYFILE" ${SSH_USER}@34.224.23.112 "echo CONNECTED && hostname" > ssh_debug_out.txt 2>&1 || true
+          echo "---- SSH raw debug output (start) ----"
+          sed -n '1,400p' ssh_debug_out.txt || true
+          echo "---- SSH raw debug output (end) ----"
+          # also print exit code
+          echo "SSH command exit code: $?"
+        '''
+      }
     }
+  }
 }
+
 
 
 
