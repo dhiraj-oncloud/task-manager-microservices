@@ -32,7 +32,7 @@ pipeline {
             }
         }
 
-        // 4️⃣ Docker Run
+        // 4️⃣ Docker Run (local container for smoke check)
         stage('Docker Run') {
             steps {
                 dir('user-service') {
@@ -47,7 +47,13 @@ pipeline {
         // 5️⃣ Docker Push to DockerHub
         stage('Docker Push') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'dockerhub-creds', 
+                        usernameVariable: 'DOCKER_USER', 
+                        passwordVariable: 'DOCKER_PASS'
+                    )
+                ]) {
                     dir('user-service') {
                         sh '''
                             echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
@@ -59,7 +65,7 @@ pipeline {
             }
         }
 
-        // 6️⃣ Test Stage
+        // 6️⃣ Test Stage (optional, continues even if tests fail)
         stage('Test') {
             steps {
                 dir('user-service') {
@@ -67,33 +73,51 @@ pipeline {
                 }
             }
         }
-       stage('EC2 SSH Debug Test - detailed') {
-  steps {
-    // use sshUserPrivateKey to get a temporary key file for the build
-    withCredentials([sshUserPrivateKey(credentialsId: 'ec2-ssh-key', keyFileVariable: 'SSH_KEYFILE', usernameVariable: 'SSH_USER')]) {
-      dir('.') {
-        sh '''
-          set -x
-          echo "---- DEBUG: Environment details ----"
-          echo "Jenkins user: $(whoami || true)"
-          echo "SSH key file exists: $( [ -f "$SSH_KEYFILE" ] && echo yes || echo no )"
-          ls -l "$SSH_KEYFILE" || true
-          echo "---- Attempt SSH (verbose) ----"
-          # attempt SSH and capture full verbose output to a file
-          ssh -vvv -o StrictHostKeyChecking=no -i "$SSH_KEYFILE" ${SSH_USER}@34.224.23.112 "echo CONNECTED && hostname" > ssh_debug_out.txt 2>&1 || true
-          echo "---- SSH raw debug output (start) ----"
-          sed -n '1,400p' ssh_debug_out.txt || true
-          echo "---- SSH raw debug output (end) ----"
-          # also print exit code
-          echo "SSH command exit code: $?"
-        '''
-      }
-    }
-  }
-}
 
+        // 7️⃣ EC2 SSH Debug Test
+        stage('EC2 SSH Debug Test - detailed') {
+            steps {
+                withCredentials([
+                    sshUserPrivateKey(
+                        credentialsId: 'ec2-ssh-key', 
+                        keyFileVariable: 'SSH_KEYFILE', 
+                        usernameVariable: 'SSH_USER'
+                    )
+                ]) {
+                    dir('.') {
+                        sh '''
+                            set -x
+                            echo "---- DEBUG: Environment details ----"
+                            echo "Jenkins user: $(whoami || true)"
+                            echo "SSH key file exists: $( [ -f "$SSH_KEYFILE" ] && echo yes || echo no )"
+                            ls -l "$SSH_KEYFILE" || true
+                            echo "---- Attempt SSH (verbose) ----"
+                            ssh -vvv -o StrictHostKeyChecking=no -i "$SSH_KEYFILE" ${SSH_USER}@34.224.23.112 "echo CONNECTED && hostname" > ssh_debug_out.txt 2>&1 || true
+                            echo "---- SSH raw debug output (start) ----"
+                            sed -n '1,400p' ssh_debug_out.txt || true
+                            echo "---- SSH raw debug output (end) ----"
+                            echo "SSH command exit code: $?"
+                        '''
+                    }
+                }
+            }
+        }
 
-
+        // 8️⃣ Deploy to EC2
+        stage('Deploy to EC2') {
+            steps {
+                sshagent(['ec2-ssh-key']) {
+                    sh '''
+                        ssh -o StrictHostKeyChecking=no ec2-user@34.224.23.112 << 'EOF'
+                            docker ps -q --filter "name=myapp" | xargs -r docker stop
+                            docker ps -aq --filter "name=myapp" | xargs -r docker rm
+                            docker pull dhirajoncloud/user-service:latest
+                            docker run -d --name myapp -p 3000:3000 dhirajoncloud/user-service:latest
+                        EOF
+                    '''
+                }
+            }
+        }
 
     }
 }
